@@ -14,11 +14,13 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
       child: MaterialApp(
-        title: 'Namer App',
+        title: 'Мафия',
         theme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.red),
         ),
+        themeMode: ThemeMode.dark,
+        debugShowCheckedModeBanner: false,
         home: MyHomePage(),
       ),
     );
@@ -43,6 +45,12 @@ class MyAppState extends ChangeNotifier {
     }
     notifyListeners();
   }
+
+  void removeCurrent(pair) {
+    favorites.remove(pair); 
+
+    notifyListeners();
+  }
 }
 
 // ...
@@ -59,42 +67,21 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     Widget page;
-switch (selectedIndex) {
-  case 0:
-    page = GeneratorPage();
-    break;
-  case 1:
-    page = FavoritesPage();
-    break;
-  default:
-    throw UnimplementedError('no widget for $selectedIndex');
-}
+  switch (selectedIndex) {
+    case 0:
+      page = GeneratorPage();
+      break;
+    case 1:
+      page = FavoritesPage();
+      break;
+    default:
+      throw UnimplementedError('no widget for $selectedIndex');
+  }
     return LayoutBuilder(
       builder: (context, constraints) {
         return Scaffold(
           body: Row(
             children: [
-              SafeArea(
-                child: NavigationRail(
-                  extended: constraints.maxWidth >= 600,
-                  destinations: [
-                    NavigationRailDestination(
-                      icon: Icon(Icons.home),
-                      label: Text('Home'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.favorite),
-                      label: Text('Favorites'),
-                    ),
-                  ],
-                  selectedIndex: selectedIndex,  
-                  onDestinationSelected: (value) {
-                    setState(() {
-                      selectedIndex = value;
-                    });
-                  },
-                ),
-              ),
               Expanded(
                 child: Container(
                   color: Theme.of(context).colorScheme.primaryContainer,
@@ -102,6 +89,25 @@ switch (selectedIndex) {
                 ),
               ),
             ],
+          ),
+          bottomNavigationBar: BottomNavigationBar(
+              items: const <BottomNavigationBarItem>[
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.favorite),
+                label: 'Favorites',
+              ),
+            ],
+            selectedItemColor: Colors.red,
+            currentIndex: selectedIndex,
+            onTap: (value) {
+                    setState(() {
+                      selectedIndex = value;
+                    });
+            }
           ),
         );
       }
@@ -132,19 +138,22 @@ class GeneratorPage extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ElevatedButton.icon(
-                onPressed: () {
-                  appState.toggleFavorite();
-                },
-                icon: Icon(icon),
-                label: Text('Like'),
+               Container(
+                height: 50.0,
+                width: 50.0,
+                child: TextButton(
+                  child: Icon(icon),
+                  onPressed: () {
+                    appState.toggleFavorite();
+                  },
+                ),
               ),
               SizedBox(width: 10),
               ElevatedButton(
                 onPressed: () {
                   appState.getNext();
                 },
-                child: Text('Next'),
+                child: Icon(Icons.arrow_forward),
               ),
             ],
           ),
@@ -174,7 +183,16 @@ class FavoritesPage extends StatelessWidget {
         ),
         for (var pair in appState.favorites)
           ListTile(
-            leading: Icon(Icons.favorite),
+            leading: Container(
+                height: 50.0,
+                width: 50.0,
+                child: TextButton(
+                  child: Icon(Icons.favorite),
+                  onPressed: () {
+                    appState.removeCurrent(pair);
+                  },
+                ),
+              ),
             title: Text(pair.asLowerCase),
           ),
       ],
